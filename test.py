@@ -14,6 +14,12 @@ import time
 import socket
 import sys
 
+from ota import OTAUpdater
+from WIFI_CONFIG import SSID, PASSWORD
+
+firmware_url = "https://github.com/shoji4638/BarCodeReader_picoOTA/main"
+
+
 # ************** Read ssid_file *****************
 def read_ssid_file(ssid_file):
     ssid_dic = {}
@@ -171,6 +177,8 @@ except Exception as e:
     led_error.on()
     sys.exit(1)
     
+ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "test.py")
+ota_updater.download_and_install_update_if_available()
 
 
 #try:
