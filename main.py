@@ -163,6 +163,7 @@ try:
 
     display.draw_text(10, 10, "BarCode Reader", font,color565(r, g, b))
     display.draw_text(10, 40, " WiFi Scan.....", font,color565(r, g, b))
+    display.draw_text(10, 64, " Ver 4", font,color565(r, g, b))
 #    display.draw_text(10, 10, "Hello minasan", font,color565(200, 100, 25))
 #    display.draw_circle(50, 90, 30, color565(0, 255, 223))
 #    display.fill_rectangle(120, 100, 80, 50, color565(128, 200, 255))
