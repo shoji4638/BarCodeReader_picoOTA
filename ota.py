@@ -4,6 +4,8 @@ import os
 import json
 import machine
 from time import sleep
+from xglcd_font import XglcdFont
+from ili9341 import Display, color565
 
 class OTAUpdater:
     """ This class handles OTA updates. It connects to the Wi-Fi, checks for updates, downloads and installs them."""
@@ -43,6 +45,7 @@ class OTAUpdater:
         while not sta_if.isconnected():
             print('.', end="")
             sleep(0.25)
+#            _display.draw_text(10, 272, 'EMANAK', font,color565(r, g, b))
         print(f'Connected to WiFi, IP is: {sta_if.ifconfig()[0]}')
         
     def fetch_latest_code(self)->bool:

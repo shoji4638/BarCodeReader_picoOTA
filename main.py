@@ -204,8 +204,12 @@ try:
 
 #    ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
     ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
+    display.draw_text(10, 272, f'On_Ver:{ota_updater.current_version}->OTA:', font,color565(r, g, b))
     ota_updater.download_and_install_update_if_available()
-
+    if ota_updater.current_version == ota_updater.latest_version:
+        display.draw_text(180, 272, f'{ota_updater.latest_version}', font,color565(0, 0, 255))
+    else:
+        display.draw_text(180, 272, f'{ota_updater.latest_version}', font,color565(255, 0, 0))
 
 #    wlan = wifi_connect(best_wifi_Status[0].decode(),ssids_dic[best_wifi_Status[0]],display)
 #    print('\nPlase read BarCode:')
