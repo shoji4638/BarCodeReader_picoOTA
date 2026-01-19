@@ -1,10 +1,3 @@
-#https://kousaku-prog.com/ili9341msp2807/#toc3
-
-#sample01.py
-#ili9341.py
-#xglcd_font.py
-#fonts\Unispace12x24.c
-
 from machine import Pin, UART, SPI
 from xglcd_font import XglcdFont
 from ili9341 import Display, color565
@@ -13,12 +6,7 @@ import network
 import time
 import socket
 import sys
-
 from ota import OTAUpdater
-#from WIFI_CONFIG import SSID, PASSWORD
-
-#firmware_url = "https://raw.githubusercontent.com/shoji4638/BarCodeReader_picoOTA/"
-#firmware_url = "https://github.com
 
 x_offset = 10
 y_offset = 10
@@ -35,13 +23,11 @@ def read_ssid_file(ssid_file):
         while True:
             content = file.readline()
             if content == '':
- #               print("ファイルの終端に達しました。")
                 break
             content = content.strip()
             content = content.split(',')
             ssid_dic[content[0].encode()] = content[1]
             
-#    print(ssid_dic)
     return ssid_dic
 
 
@@ -54,22 +40,16 @@ def scan_best_wifi(_SSID_LIST,_display):
         best_ssid = [b'',b'',0,-100,0,0]
         n = 2
 
-#        for n, SSID in enumerate(list(_SSID_LIST)):
         _display.draw_text(x_offset, y_offset+(n)*24, 'RSSI: SSID', font,color565(r, g, b))
         for SSID in list(_SSID_LIST):
-#            print('SSID:',SSID)
             for scan in scans:
-#                print(' ',scan[0],end="")
                 if SSID == scan[0]:
                     _display.draw_text(x_offset, y_offset+(1+n)*24, f'{scan[3]} : {SSID.decode()}', font,color565(r, g, b))
                     n += 1
                     if best_ssid[3] < scan[3]:
                        best_ssid = scan
-#                       print(scan)    #(ssid, bssid, channel, RSSI, security, hidden)
 
         wlan.disconnect()
-#        print('Best_SSID:',best_ssid[0],' Pass:',_SSID_LIST[best_ssid[0]])
-#        print('Best_SSID:',best_ssid[0],' Pass:',_SSID_LIST[best_ssid[0]])
         print('\nBest_SSID:',best_ssid[0].decode())
         
     except Exception as e:
@@ -116,13 +96,10 @@ def wifi_connect(SSID,PW,_display):
             _display.draw_text(x_offset, y_offset+1*24, f'SSID:{SSID}', font,color565(0, 0, 255))
             wlan_status = wlan.ifconfig()
 
-            #print(type(wlan_status[0]))  #str
-            #display.text(' %s' %wlan_status[0], 0, 20, 1)
             _display.draw_text(x_offset, y_offset+2*24, f'IP:{wlan_status[0]}', font,color565(0, 0, 255))
             _display.draw_text(x_offset, y_offset+3*24, f'MASK:{wlan_status[1]}', font,color565(0, 0, 255))
             _display.draw_text(x_offset, y_offset+4*24, f'GW:{wlan_status[2]}', font,color565(0, 0, 255))
             _display.draw_text(x_offset, y_offset+5*24, f'DNS:{wlan_status[3]}', font,color565(0, 0, 255))
-            #_display.show()
 
             print('\nWiFi Connected!')
             print(f' SSID:{SSID}')
@@ -132,14 +109,9 @@ def wifi_connect(SSID,PW,_display):
             print(f' Name Server: {wlan_status[3]}')
             networks = wlan.scan()
             ssid_list = []
-#            for scan in scans:
-#                print(' ',scan[0],end="")
-#                if SSID == scan[0]:
-
             for net in networks:
                 if SSID.encode() == net[0]:
                     print(f' RSSI: {net[3]}')
-            
             led_error.off()
 
     except Exception as e:
@@ -181,6 +153,72 @@ def show_received_message(uart):
     else:
         led_code.off()
 #        time.sleep(1)
+
+    try:    #01. Preparing Socket : socket()
+        led_db.on()
+        print('01:******* socket connect... *********')
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except OSError as e:
+        clinet = None
+        print('\n !!!!!!! connecting ERROR !!!!!!')
+        print(f'{e}')
+        led_error.on()
+        display.draw_text(x_offset, y_offset+2*24, ' Socket NG', font,color565(255, 0, 0))
+    else:
+        display.draw_text(x_offset, y_offset+2*24, ' Socket OK', font,color565(0, 0, 255))
+        print(' socket OK')
+
+    try:    #02. Configuring Soccket and Connect to the Server : connect()
+        print('02:******* to server connecting ********')
+        client.connect((CONTROL_HOST,PORT))
+    except OSError as e:
+        print('\n!!!!!!! connect ERROR (OSError) !!!!!!')
+        print(f' to {CONTROL_HOST}.{PORT} connect ERROR: {e}')
+        client.close()
+        clinet = None
+        led_error.on()
+        display.draw_text(x_offset, y_offset+3*24, ' Connect NG', font,color565(255, 0, 0))
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
+    except Exception as e:
+        print('\n!!!!!!! connect ERROR (Other) !!!!!!')
+        print(f' to {CONTROL_HOST}.{PORT}に接続した際に予期せぬエラーが発生しました: {e}')
+        client.close()
+        clinet = None
+        led_error.on()
+        display.draw_text(x_offset, y_offset+3*24, ' Connect NG', font,color565(255, 0, 0))
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
+    else:
+        print(f' kadoma_control_PC to {CONTROL_HOST}.{PORT} connect OK')
+        led_db.off()
+        
+    try:    #03. Data　Yaritori : send(), recv()
+    # サーバーへのメッセージ
+        print('03:******* SEND to server ********')
+        print(' Send  :',received_txt)
+        client.sendall(received_txt)
+        # サーバーからのメッセージを受信
+        print(' Waiting Recive:',end='')
+        data = client.recv(BUFSIZE)
+        print(data.decode(FORMAT))
+    except Exception as e:
+        print('\n!!!!!!! Write/Read ERROR !!!!!!!')
+        print(f'Write/Read中に予期せぬエラーが発生しました: {e}')
+        client.close()
+        clinet = None
+        led_error.on()
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
+    else:
+        print(' send/recive OK')
+        #04. Closing the connection : close()
+        client.close()
+        delta = time.ticks_diff(time.ticks_ms(), start) # 時差を計算
+#        display.text(f'SUCCESS!:{delta}ms', 0, 20, 1)	#一般的なバーコード
+        display.draw_text(x_offset, y_offset+2*24, f'SUCCESS!:{delta}ms', font,color565(255, 255, 255))
+        print(f'データベースへの記録に成功しました。処理時間: {delta}ms')
+
 
 #************************* Main ***************************   
 try:
@@ -256,8 +294,6 @@ try:
     display.draw_text(0, y_offset+1*24, 'Serial BarCodeReader', font,color565(r, g, b))
     display.draw_text(0, y_offset+2*24, '  Init....', font,color565(r, g, b))
 
-#    uart = UART(0, 9600)  # 与えたボーレートで初期化
-    #シリアル割込み設定
 #    uart0 = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))	#OK
     uart0 = UART(0, baudrate=9600, tx=Pin(16), rx=Pin(17))	#OK
     uart0.irq(handler=show_received_message, trigger=UART.IRQ_RXIDLE)
