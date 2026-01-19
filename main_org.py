@@ -182,6 +182,76 @@ def show_received_message(uart):
         led_code.off()
 #        time.sleep(1)
 
+    try:    #01. Preparing Socket : socket()
+        led_db.on()
+        print('01:******* socket connect... *********')
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except OSError as e:
+        clinet = None
+        print('\n !!!!!!! connecting ERROR !!!!!!')
+        print(f'{e}')
+        led_error.on()
+        display.draw_text(x_offset, y_offset+2*24, ' Socket NG', font,color565(255, 0, 0))
+    else:
+        display.draw_text(x_offset, y_offset+2*24, ' Socket OK', font,color565(0, 0, 255))
+        print(' socket OK')
+
+    try:    #02. Configuring Soccket and Connect to the Server : connect()
+        print('02:******* to server connecting ********')
+        client.connect((CONTROL_HOST,PORT))
+    except OSError as e:
+        print('\n!!!!!!! connect ERROR (OSError) !!!!!!')
+        print(f' to {CONTROL_HOST}.{PORT} connect ERROR: {e}')
+        client.close()
+        clinet = None
+        led_error.on()
+        display.draw_text(x_offset, y_offset+3*24, ' Connect NG', font,color565(255, 0, 0))
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
+    except Exception as e:
+        print('\n!!!!!!! connect ERROR (Other) !!!!!!')
+        print(f' to {CONTROL_HOST}.{PORT}に接続した際に予期せぬエラーが発生しました: {e}')
+        client.close()
+        clinet = None
+        led_error.on()
+        display.draw_text(x_offset, y_offset+3*24, ' Connect NG', font,color565(255, 0, 0))
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
+    else:
+        print(f' kadoma_control_PC to {CONTROL_HOST}.{PORT} connect OK')
+        led_db.off()
+        
+    try:    #03. Data　Yaritori : send(), recv()
+    # サーバーへのメッセージ
+        print('03:******* SEND to server ********')
+        print(' Send  :',received_txt)
+        client.sendall(received_txt)
+        # サーバーからのメッセージを受信
+        print(' Waiting Recive:',end='')
+        data = client.recv(BUFSIZE)
+        print(data.decode(FORMAT))
+    except Exception as e:
+        print('\n!!!!!!! Write/Read ERROR !!!!!!!')
+        print(f'Write/Read中に予期せぬエラーが発生しました: {e}')
+        client.close()
+        clinet = None
+        led_error.on()
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
+    else:
+        print(' send/recive OK')
+        #04. Closing the connection : close()
+        client.close()
+        delta = time.ticks_diff(time.ticks_ms(), start) # 時差を計算
+#        display.text(f'SUCCESS!:{delta}ms', 0, 20, 1)	#一般的なバーコード
+        display.draw_text(x_offset, y_offset+2*24, f'SUCCESS!:{delta}ms', font,color565(255, 255, 255))
+        print(f'データベースへの記録に成功しました。処理時間: {delta}ms')
+
+def show_error_message(display):
+    display.clear() # 表示内容消去
+    display.draw_text(0, y_offset+10*24, 'Error!!!', font,color565(255, 0, 0))
+
+
 #************************* Main ***************************   
 try:
     print('\n***INIT I/O SPI:LCD ILI9341 ***')
