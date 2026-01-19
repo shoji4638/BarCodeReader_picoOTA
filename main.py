@@ -74,7 +74,6 @@ def scan_best_wifi(_SSID_LIST,_display):
         
     except Exception as e:
         print(f'予期せぬエラーが発生しました: {e}')
-#        led_error.on()
         sys.exit(1)
         wlan = None
     
@@ -164,37 +163,15 @@ def show_received_message(uart):
 #        display.text('BarCode Read', 0, 0, 1)
         display.draw_text(x_offset, y_offset, "BarCode Reader", font,color565(255, 255, 255))
         received_txt = uart.read()
-#        display.text(received_txt[:13], 0, 10, 1)	#一般的なバーコード [:13]で最後の￥ｒ（リターン）を除く
-#        display.text(received_txt[:-1], 0, 10, 1)	#最後の￥ｒ（リターン）を除く
-#        print('type(received_txt):',type(received_txt))
         if type(received_txt) == bytes:
             print(f' Code:{received_txt} Type:Bytes')
             received_str = received_txt[:-1].decode('utf-8')
             print(f' Code:{received_str} len:{len(received_str)} Type:str')
             display.draw_text(x_offset, y_offset+1*24, received_str, font,color565(255, 255, 255))
-#            if received_str.isdecimal() is True:
-#               unicode(test).isnumeric()
             if int(received_str)>0:
                 display.draw_text(x_offset+20*10, y_offset+1*24, 'OK', font,color565(0, 0, 255))
             else:
                 display.draw_text(x_offset+20*10, y_offset+1*24, 'NG', font,color565(255, 0, 0))
-
-#            received_txt = ''
-#        if len(received_txt) == 9:
-#        if len(received_str) == 14:
-#        display.draw_text(x_offset, y_offset+1*24, received_txt[:-1], font,color565(255, 255, 255))
-#        display.show()
-#        time.sleep_ms(1000)
-#    print('\nBarCodeData:',type(received_txt), received_txt)
-        #print(f'\n  BarCodeData:{received_txt[:-1]} len:',len(received_txt),' type:',type(received_txt))
-        #else:
-        #    print('Length Error!!!')
-#        print(f' BarCodeData:{received_txt[:-1]}')
-            
-#    except NoneType:
-#        print(f'バーコード読み込み時に「NoneType:」エラーが発生しました: {e}')
-#        clinet = None
-#        led_error.on()
         
     except Exception as e:
         print(f'バーコード読み込み時に予期せぬエラーが発生しました: {e}')
@@ -244,11 +221,6 @@ def show_received_message(uart):
         print(f' kadoma_control_PC to {CONTROL_HOST}.{PORT} connect OK')
         led_db.off()
         
-#    if client is None:
-#        print('\n************ ERROR **************')
-#        print(f'Socket/connectでエラーが発生しました。終了します。')
-#        sys.exit(1)
-
     try:    #03. Data　Yaritori : send(), recv()
     # サーバーへのメッセージ
         print('03:******* SEND to server ********')
@@ -300,24 +272,12 @@ try:
 
     display.draw_text(x_offset, y_offset, "BarCode Reader", font,color565(r, g, b))
     display.draw_text(x_offset, y_offset+1*24, " WiFi Scan.....", font,color565(r, g, b))
-#    display.draw_text(10, 64, " Ver 4", font,color565(r, g, b))
-#    display.draw_text(10, 10, "Hello minasan", font,color565(200, 100, 25))
-#    display.draw_circle(50, 90, 30, color565(0, 255, 223))
-#    display.fill_rectangle(120, 100, 80, 50, color565(128, 200, 255))
-#    display.draw_text8x8(40,40,"Hello world",color565(211,200,50))
-#    def clup():
-#        utime.sleep(100)
-#        display.clear()
-#    clup()
 
 except Exception as e:
     print(f'起動初期化中に予期せぬエラーが発生しました: {e}')
     led_error.on()
     sys.exit(1)
     
-#ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
-#ota_updater.download_and_install_update_if_available()
-
 try:
     print('\n*** OTA WiFi connect ***')
     led_wifi.on()
@@ -360,13 +320,6 @@ except Exception as e:
 try:
     print('\n*** WiFi connect ***')
     led_wifi.on()
-#    ssids_dic = read_ssid_file('ssid_list.txt')
-#    print('ssid_file:',ssids_dic)
-
-#    best_wifi_Status = scan_best_wifi(ssids_dic)
-#    print('Best SSID:',best_wifi_Status[0],' Pass:',ssids_dic[best_wifi_Status[0]])
-    #wlan = wifi_connect(SSID,PW)
-#    wlan = wifi_connect(best_wifi_Status[0].decode(),ssids_dic[best_wifi_Status[0]])
     wlan = wifi_connect(SSID,PASSWORD,display)
 
     display.clear()
@@ -418,21 +371,9 @@ while True:
             print('ReConnect WiFi')
             display.clear()
             display.draw_text(0, y_offset+1*24, 'Best　WiFi　SSID', font,color565(r, g, b))
-#            display.text('BarCode Reader', 1, 1, 1)    # 文字表示（"表示内容", x, y, 色）
-#            display.text('WiFi Reconnecing', 1, 11, 1)
-#            display.text(' Now!!!!!!!!!', 1, 21, 1)
 #            display.rect(0, 0, 127, 32, 1)    #四角
-#            display.show()
             time.sleep_ms(5000)
             machine.reset()
-##            wlan = wifi_connect(best_wifi_Status[0],ssids_dic[best_wifi_Status[0]])
-##            wlan = wifi_connect(SSID_LIST)
-##            ssids_dic = read_ssid_file('ssid_list.txt')
-##            print('ssids_dic:',ssids_dic)
-
-##            best_wifi_Status = scan_best_wifi(ssids_dic)
-##            print('Best SSID:',best_wifi_Status)
-##            print('Best SSID:',best_wifi_Status[0],' Pass:',ssids_dic[best_wifi_Status[0]])
 
     except Exception as e:
         led_error.on()
@@ -442,22 +383,6 @@ while True:
 
         machine.reset()
 
-#        ssids_dic = read_ssid_file('ssid_list.txt')
-#        print('ssids_dic:',ssids_dic)
-
-#        best_wifi_Status = scan_best_wifi(ssids_dic)
-
-#        print('Best SSID:',best_wifi_Status)
-#        print('Best SSID:',best_wifi_Status[0],' Pass:',ssids_dic[best_wifi_Status[0]])
-
-#        wlan = wifi_connect(SSID,PW)
-        #wlan = wifi_connect(SSID,PW)
-#        wlan = wifi_connect(ssids_dic)
-        
-#        if wlan.status() != 3:
-#        print('Reconnect ! WiFi:',wlan.status())    
-#        wlan = wifi_connect(SSID,PW)
-#        sys.exit(1)
     else:
         time.sleep_ms(10000)
 
