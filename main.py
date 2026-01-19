@@ -158,7 +158,7 @@ def show_received_message(uart):
     start = time.ticks_ms() # ミリ秒カウンター値を取得
     try:
         led_code.on()
-        print('\n********* BarCoder Read **********')
+        print('\n00:********* BarCoder Read **********')
         display.clear() # 表示内容消去    
         # 文字表示（"表示内容", x, y, 色）
 #        display.text('BarCode Read', 0, 0, 1)
@@ -166,15 +166,35 @@ def show_received_message(uart):
         received_txt = uart.read()
 #        display.text(received_txt[:13], 0, 10, 1)	#一般的なバーコード [:13]で最後の￥ｒ（リターン）を除く
 #        display.text(received_txt[:-1], 0, 10, 1)	#最後の￥ｒ（リターン）を除く
-        display.draw_text(x_offset, y_offset+1*24, received_txt[:-1], font,color565(255, 255, 255))
+#        print('type(received_txt):',type(received_txt))
+        if type(received_txt) == bytes:
+            print(f' Code:{received_txt} Type:Bytes')
+            received_str = received_txt[:-1].decode('utf-8')
+            print(f' Code:{received_str} len:{len(received_str)} Type:str')
+            display.draw_text(x_offset, y_offset+1*24, received_str, font,color565(255, 255, 255))
+#            if received_str.isdecimal() is True:
+#               unicode(test).isnumeric()
+            if int(received_str)>0:
+                display.draw_text(x_offset+20*10, y_offset+1*24, 'OK', font,color565(0, 0, 255))
+            else:
+                display.draw_text(x_offset+20*10, y_offset+1*24, 'NG', font,color565(255, 0, 0))
+
+#            received_txt = ''
+#        if len(received_txt) == 9:
+#        if len(received_str) == 14:
+#        display.draw_text(x_offset, y_offset+1*24, received_txt[:-1], font,color565(255, 255, 255))
 #        display.show()
 #        time.sleep_ms(1000)
 #    print('\nBarCodeData:',type(received_txt), received_txt)
-        print(f'\n00:BarCodeData:{received_txt[:-1]} len:',len(received_txt),' type:',type(received_txt))
-    except NoneType:
-        print(f'バーコード読み込み時に「NoneType:」エラーが発生しました: {e}')
-        clinet = None
-        led_error.on()
+        #print(f'\n  BarCodeData:{received_txt[:-1]} len:',len(received_txt),' type:',type(received_txt))
+        #else:
+        #    print('Length Error!!!')
+#        print(f' BarCodeData:{received_txt[:-1]}')
+            
+#    except NoneType:
+#        print(f'バーコード読み込み時に「NoneType:」エラーが発生しました: {e}')
+#        clinet = None
+#        led_error.on()
         
     except Exception as e:
         print(f'バーコード読み込み時に予期せぬエラーが発生しました: {e}')
@@ -183,56 +203,71 @@ def show_received_message(uart):
         led_error.on()
     else:
         led_code.off()
+#        time.sleep(1)
 
     try:    #01. Preparing Socket : socket()
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         led_db.on()
+        print('01:******* socket connect... *********')
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except OSError as e:
         clinet = None
-        print('\n********* socket ERROR ***********')
+        print('\n !!!!!!! connecting ERROR !!!!!!')
         print(f'{e}')
         led_error.on()
+        display.draw_text(x_offset, y_offset+2*24, ' Socket NG', font,color565(255, 0, 0))
     else:
-        print('01:socket OK')
+        display.draw_text(x_offset, y_offset+2*24, ' Socket OK', font,color565(0, 0, 255))
+        print(' socket OK')
 
     try:    #02. Configuring Soccket and Connect to the Server : connect()
+        print('02:******* to server connecting ********')
         client.connect((CONTROL_HOST,PORT))
     except OSError as e:
-        print('\n********* connect ERROR **********')
-        print(f'to {CONTROL_HOST}.{PORT} connect ERROR: {e}')
+        print('\n!!!!!!! connect ERROR (OSError) !!!!!!')
+        print(f' to {CONTROL_HOST}.{PORT} connect ERROR: {e}')
         client.close()
         clinet = None
         led_error.on()
-    except Exception as e:
-        print('\n********* connect ERROR **********')
-        print(f'to {CONTROL_HOST}.{PORT}に接続した際に予期せぬエラーが発生しました: {e}')
-        client.close()
-        clinet = None
-        led_error.on()
-    else:
-        print('02:connect OK')
-        led_db.off()
-        
-    if client is None:
-        print('\n************ ERROR **************')
+        display.draw_text(x_offset, y_offset+3*24, ' Connect NG', font,color565(255, 0, 0))
         print(f'Socket/connectでエラーが発生しました。終了します。')
         sys.exit(1)
+    except Exception as e:
+        print('\n!!!!!!! connect ERROR (Other) !!!!!!')
+        print(f' to {CONTROL_HOST}.{PORT}に接続した際に予期せぬエラーが発生しました: {e}')
+        client.close()
+        clinet = None
+        led_error.on()
+        display.draw_text(x_offset, y_offset+3*24, ' Connect NG', font,color565(255, 0, 0))
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
+    else:
+        print(f' kadoma_control_PC to {CONTROL_HOST}.{PORT} connect OK')
+        led_db.off()
+        
+#    if client is None:
+#        print('\n************ ERROR **************')
+#        print(f'Socket/connectでエラーが発生しました。終了します。')
+#        sys.exit(1)
 
     try:    #03. Data　Yaritori : send(), recv()
     # サーバーへのメッセージ
-        client.sendall(received_txt)
+        print('03:******* SEND to server ********')
         print(' Send  :',received_txt)
+        client.sendall(received_txt)
         # サーバーからのメッセージを受信
+        print(' Waiting Recive:',end='')
         data = client.recv(BUFSIZE)
-        print(' Recive:',data.decode(FORMAT))
+        print(data.decode(FORMAT))
     except Exception as e:
-        print('\n********* Write/Read ERROR **********')
+        print('\n!!!!!!! Write/Read ERROR !!!!!!!')
         print(f'Write/Read中に予期せぬエラーが発生しました: {e}')
         client.close()
         clinet = None
         led_error.on()
+        print(f'Socket/connectでエラーが発生しました。終了します。')
+        sys.exit(1)
     else:
-        print('03:send/recive OK')
+        print(' send/recive OK')
         #04. Closing the connection : close()
         client.close()
         delta = time.ticks_diff(time.ticks_ms(), start) # 時差を計算
@@ -240,7 +275,12 @@ def show_received_message(uart):
         display.draw_text(x_offset, y_offset+2*24, f'SUCCESS!:{delta}ms', font,color565(255, 255, 255))
         print(f'データベースへの記録に成功しました。処理時間: {delta}ms')
 
+def show_error_message(display):
+    display.clear() # 表示内容消去
+    display.draw_text(0, y_offset+10*24, 'Error!!!', font,color565(255, 0, 0))
 
+
+#************************* Main ***************************   
 try:
     print('\n***INIT I/O SPI:LCD ILI9341 ***')
     led = Pin("LED", Pin.OUT, value=0)  # LEDピンをOFF状態で定義
@@ -309,10 +349,6 @@ try:
     else:
         display.draw_text(170, y_offset+5*24, f'{ota_updater.latest_version}', font,color565(255, 0, 0))
         
-    uart = UART(0, 9600)  # 与えたボーレートで初期化
-    #シリアル割込み設定
-    uart.irq(handler=show_received_message, trigger=UART.IRQ_RXIDLE)
-
 #    wlan = wifi_connect(best_wifi_Status[0].decode(),ssids_dic[best_wifi_Status[0]],display)
 #    print('\nPlase read BarCode:')
 except Exception as e:
@@ -320,6 +356,7 @@ except Exception as e:
     led_error.on()
     sys.exit(1)
 
+#*************** WiFi connect/Serial Start *********************
 try:
     print('\n*** WiFi connect ***')
     led_wifi.on()
@@ -331,7 +368,21 @@ try:
     #wlan = wifi_connect(SSID,PW)
 #    wlan = wifi_connect(best_wifi_Status[0].decode(),ssids_dic[best_wifi_Status[0]])
     wlan = wifi_connect(SSID,PASSWORD,display)
+
+    display.clear()
+    display.draw_text(0, y_offset+1*24, 'Serial BarCodeReader', font,color565(r, g, b))
+    display.draw_text(0, y_offset+2*24, '  Init....', font,color565(r, g, b))
+
+#    uart = UART(0, 9600)  # 与えたボーレートで初期化
+    #シリアル割込み設定
+#    uart0 = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))	#OK
+    uart0 = UART(0, baudrate=9600, tx=Pin(16), rx=Pin(17))	#OK
+    uart0.irq(handler=show_received_message, trigger=UART.IRQ_RXIDLE)
+    display.draw_text(0, y_offset+2*24, ' Start IRQ StandBy', font,color565(r, g, b))
+    display.draw_text(0, y_offset+3*24, ' Ready to read', font,color565(0, 0, 255))
+
     #send_data = 0
+    
     print('\nPlase read BarCode:')
 except Exception as e:
     print(f'OTA確認OK　WiFi接続中に予期せぬエラーが発生しました: {e}')
@@ -339,7 +390,6 @@ except Exception as e:
     sys.exit(1)
 
 
-display.clear()
 
 while True:
     try:
@@ -353,7 +403,9 @@ while True:
             for net in networks:
                 if SSID.encode() == net[0]:
                     display.draw_text(0, 11*24, f'{SSID}', font,color565(r, g, b))
-                    if net[3] > -60:
+                    if net[3] > -50:
+                        display.draw_text(0, 12*24, f'RSSI: {net[3]} dBm', font,color565(0, 255, 0))
+                    elif net[3] > -60:
                         display.draw_text(0, 12*24, f'RSSI: {net[3]} dBm', font,color565(0, 0, 255))
                     elif net[3] > -70:
                         display.draw_text(0, 12*24, f'RSSI: {net[3]} dBm', font,color565(255, 255, 0))
