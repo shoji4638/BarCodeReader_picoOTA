@@ -196,8 +196,8 @@ def show_received_message(uart):
     try:    #03. Data　Yaritori : send(), recv()
     # サーバーへのメッセージ
         print('03:******* SEND to server ********')
-        print(' Send  :',received_txt)
-        client.sendall(received_txt)
+        print(' Send  :',received_str+'_3')
+        client.sendall(received_str+'_3')
         # サーバーからのメッセージを受信
         print(' Waiting Recive:',end='')
         data = client.recv(BUFSIZE)
