@@ -258,17 +258,13 @@ try:
     PASSWORD = ssids_dic[best_wifi_Status[0]]
     display.clear()
     display.draw_text(0, y_offset+1*24, 'Best　WiFi　SSID', font,color565(r, g, b))
-#    display.draw_text(10, 224, f'ID:{best_wifi_Status[0].decode()}', font,color565(r, g, b))
     display.draw_text(x_offset, y_offset+2*24, f'{SSID}', font,color565(r, g, b))
-#    display.draw_text(10, 248, f'PW:{ssids_dic[best_wifi_Status[0]]}', font,color565(r, g, b))
     display.draw_text(0, y_offset+3*24, 'Password', font,color565(r, g, b))
-    display.draw_text(x_offset, y_offset+4*24, f'PW:{PASSWORD}', font,color565(r, g, b))
 #    print('Best SSID:',best_wifi_Status[0],' Pass:',ssids_dic[best_wifi_Status[0]])
     print('Best SSID:',SSID,' Pass:',PASSWORD)
     
     firmware_url = "https://raw.githubusercontent.com/shoji4638/BarCodeReader_picoOTA/"
 
-#    ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
     ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
     display.draw_text(0, y_offset+5*24, f'On_Ver:{ota_updater.current_version}->OTA:', font,color565(r, g, b))
     ota_updater.download_and_install_update_if_available()
@@ -277,8 +273,6 @@ try:
     else:
         display.draw_text(170, y_offset+5*24, f'{ota_updater.latest_version}', font,color565(255, 0, 0))
         
-#    wlan = wifi_connect(best_wifi_Status[0].decode(),ssids_dic[best_wifi_Status[0]],display)
-#    print('\nPlase read BarCode:')
 except Exception as e:
     print(f'OTA確認中に予期せぬエラーが発生しました: {e}')
     led_error.on()
@@ -316,9 +310,6 @@ while True:
 #            print(wlan.status(),end='')
             networks = wlan.scan()
             ssid_list = []
-#            for scan in scans:
-#                print(' ',scan[0],end="")
-#                if SSID == scan[0]:
             for net in networks:
                 if SSID.encode() == net[0]:
                     display.draw_text(0, 11*24, f'{SSID}', font,color565(r, g, b))
